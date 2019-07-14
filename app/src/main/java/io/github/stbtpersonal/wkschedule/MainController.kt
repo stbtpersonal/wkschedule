@@ -29,4 +29,11 @@ class MainController(private val mainActivity: MainActivity) {
                 loginEditText.text.clear()
             })
     }
+
+    // TODO:
+    // * Add a "please wait" initializing screen
+    // * If apiKey is null: send to login screen
+    // * Otherwise: try getUser
+    // ** If getUser fails: send to login screen
+    // ** Otherwise: store the user level (in sharedPrefs) and send to main screen
 }
