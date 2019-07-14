@@ -5,10 +5,33 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-    <TextView
-            android:layout_width="wrap_content"
+    <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="Hello World!"/>
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical">
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Enter your API Key"/>
+
+        <EditText
+                android:id="@+id/LoginEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:layout_marginTop="10dp"
+                android:textAlignment="center"/>
+
+        <Button
+                android:id="@+id/LoginButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="Log In"
+                android:layout_marginTop="10dp"/>
+    </LinearLayout>
 
 </FrameLayout>

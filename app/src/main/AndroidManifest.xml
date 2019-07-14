@@ -3,13 +3,16 @@
           xmlns:tools="http://schemas.android.com/tools"
           package="io.github.stbtpersonal.wkschedule">
 
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
             android:allowBackup="false"
             android:icon="@drawable/ic_launcher"
             android:label="WaniKani"
             android:roundIcon="@drawable/ic_launcher_round"
             android:supportsRtl="true"
-            android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar" tools:ignore="GoogleAppIndexingWarning">
+            android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar"
+            tools:ignore="GoogleAppIndexingWarning">
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
