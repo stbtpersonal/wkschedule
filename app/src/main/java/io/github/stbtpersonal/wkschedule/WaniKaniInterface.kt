@@ -5,6 +5,8 @@ import com.android.volley.Response
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import java.util.*
+import kotlin.collections.HashMap
 
 class WaniKaniInterface(private val context: Context) {
     private val baseUrl = "https://api.wanikani.com/v2"
@@ -13,12 +15,17 @@ class WaniKaniInterface(private val context: Context) {
     private fun buildRequest(
         apiKey: String,
         endpoint: String,
-        successListener: (String) -> Unit,
-        failureListener: (VolleyError) -> Unit
+        params: Map<String, String>?,
+        failureListener: (VolleyError) -> Unit,
+        successListener: (String) -> Unit
     ): StringRequest {
+        val paramStrings = params?.map { entry -> "${entry.key}=${entry.value}" }
+        val paramsString = paramStrings?.joinToString(separator = "&", prefix = "", postfix = "")
+        val url = "$baseUrl/$endpoint${if (paramsString == null) "" else "?$paramsString"}"
+
         return object : StringRequest(
             Method.GET,
-            "$baseUrl/$endpoint",
+            url,
             Response.Listener<String>(successListener),
             Response.ErrorListener(failureListener)
         ) {
@@ -33,10 +40,27 @@ class WaniKaniInterface(private val context: Context) {
 
     fun getUser(
         apiKey: String,
-        successListener: (String) -> Unit,
-        failureListener: (VolleyError) -> Unit
+        failureListener: (VolleyError) -> Unit,
+        successListener: (String) -> Unit
     ) {
-        val request = this.buildRequest(apiKey, "user", successListener, failureListener)
+        val request = this.buildRequest(apiKey, "user", null, failureListener, successListener)
+        this.requestQueue.add(request)
+    }
+
+    fun getAssignments(
+        apiKey: String,
+        isBurned: Boolean,
+        availableAfter: Date,
+        availableBefore: Date,
+        failureListener: (VolleyError) -> Unit,
+        successListener: (String) -> Unit
+    ) {
+        val params = HashMap<String, String>()
+        params["burned"] = "$isBurned"
+        params["available_after"] = DateUtils.toIso8601(availableAfter)
+        params["available_before"] = DateUtils.toIso8601(availableBefore)
+
+        val request = this.buildRequest(apiKey, "assignments", params, failureListener, successListener)
         this.requestQueue.add(request)
     }
 }
