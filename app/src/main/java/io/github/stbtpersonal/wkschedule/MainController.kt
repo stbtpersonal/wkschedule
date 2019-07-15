@@ -9,6 +9,7 @@ import android.widget.Toast
 import com.android.volley.VolleyError
 import org.json.JSONObject
 import java.util.*
+import java.util.concurrent.ConcurrentSkipListMap
 
 class MainController(private val mainActivity: MainActivity) {
     private val waniKaniInterface = WaniKaniInterface(this.mainActivity)
@@ -72,10 +73,53 @@ class MainController(private val mainActivity: MainActivity) {
             tomorrow,
             { this.fail(it) },
             { response ->
-                val responseJson = JSONObject(response)
+                val schedule = this.buildSchedule(response)
+                this.updateScheduleView(schedule)
 
                 this.showSchedule()
             })
+    }
+
+    private fun buildSchedule(getAssignmentsResponse: String): Map<String, AssignmentsHour> {
+        val responseJson = JSONObject(getAssignmentsResponse)
+        val dataJson = responseJson.getJSONArray("data")
+
+        val assignmentHours = ConcurrentSkipListMap<String, AssignmentsHour>()
+        for (i in 0 until dataJson.length()) {
+            val assignmentJson = dataJson.getJSONObject(i)
+            val assignmentDataJson = assignmentJson.getJSONObject("data")
+
+            val availableAt = assignmentDataJson.getString("available_at")
+            if (!assignmentHours.containsKey(availableAt)) {
+                assignmentHours[availableAt] = AssignmentsHour()
+            }
+            val assignmentsHour = assignmentHours[availableAt]!!
+
+            val subjectType = assignmentDataJson.getString("subject_type")
+            val passed = assignmentDataJson.getBoolean("passed")
+            when (subjectType) {
+                "radical" -> {
+                    assignmentsHour.radicals++
+                    if (!passed) {
+                        assignmentsHour.newRadicals++
+                    }
+                }
+                "kanji" -> {
+                    assignmentsHour.kanji++
+                    if (!passed) {
+                        assignmentsHour.newKanji++
+                    }
+                }
+                "vocabulary" -> {
+                    assignmentsHour.vocabulary++
+                    if (!passed) {
+                        assignmentsHour.newVocabulary++
+                    }
+                }
+            }
+        }
+
+        return assignmentHours
     }
 
     private fun fail(error: VolleyError) {
@@ -99,6 +143,10 @@ class MainController(private val mainActivity: MainActivity) {
 
         this.keyValueStore.apiKey = apiKey
         this.initialize()
+    }
+
+    private fun updateScheduleView(schedule: Map<String, AssignmentsHour>) {
+
     }
 
     private fun showSchedule() {
