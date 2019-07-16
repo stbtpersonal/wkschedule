@@ -49,18 +49,45 @@ class WaniKaniInterface(private val context: Context) {
 
     fun getAssignments(
         apiKey: String,
-        isBurned: Boolean,
         availableAfter: Date,
         availableBefore: Date,
         failureListener: (VolleyError) -> Unit,
         successListener: (String) -> Unit
     ) {
         val params = HashMap<String, String>()
-        params["burned"] = "$isBurned"
+        params["burned"] = "false"
         params["available_after"] = DateUtils.toIso8601(availableAfter)
         params["available_before"] = DateUtils.toIso8601(availableBefore)
 
         val request = this.buildRequest(apiKey, "assignments", params, failureListener, successListener)
+        this.requestQueue.add(request)
+    }
+
+    fun getLevelAssignments(
+        apiKey: String,
+        level: String,
+        failureListener: (VolleyError) -> Unit,
+        successListener: (String) -> Unit
+    ) {
+        val params = HashMap<String, String>()
+        params["subject_types"] = "radical,kanji"
+        params["levels"] = level
+
+        val request = this.buildRequest(apiKey, "assignments", params, failureListener, successListener)
+        this.requestQueue.add(request)
+    }
+
+    fun getSubjects(
+        apiKey: String,
+        level: String,
+        failureListener: (VolleyError) -> Unit,
+        successListener: (String) -> Unit
+    ) {
+        val params = HashMap<String, String>()
+        params["types"] = "radical,kanji"
+        params["levels"] = level
+
+        val request = this.buildRequest(apiKey, "subjects", params, failureListener, successListener)
         this.requestQueue.add(request)
     }
 }

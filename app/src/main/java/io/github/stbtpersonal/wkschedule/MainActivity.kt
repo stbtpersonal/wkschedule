@@ -95,7 +95,6 @@ class MainActivity : Activity() {
 
         this.waniKaniInterface.getAssignments(
             apiKey,
-            false,
             now,
             tomorrow,
             { this.fail(it) },
@@ -103,7 +102,7 @@ class MainActivity : Activity() {
                 val schedule = this.buildSchedule(response)
                 this.scheduleRecyclerViewAdapter.setScheduleItems(schedule)
 
-                this.showSchedule()
+                this.getSubjects(apiKey, level)
             })
     }
 
@@ -147,6 +146,120 @@ class MainActivity : Activity() {
         }
 
         return scheduleItems
+    }
+
+    private fun getSubjects(apiKey: String, level: String) {
+        this.waniKaniInterface.getLevelAssignments(
+            apiKey,
+            level,
+            { this.fail(it) },
+            { getLevelAssignmentsResponse ->
+                this.waniKaniInterface.getSubjects(
+                    apiKey,
+                    level,
+                    { this.fail(it) },
+                    { getSubjectsResponse ->
+                        val assignedSubjectIds = this.extractAssignedSubjectIds(getLevelAssignmentsResponse)
+                        val subjects = this.buildSubjects(getSubjectsResponse, assignedSubjectIds)
+
+                        this.showSchedule()
+                    })
+            })
+    }
+
+    private fun extractAssignedSubjectIds(getLevelAssignmentsResponse: String): Set<Int> {
+        val responseJson = JSONObject(getLevelAssignmentsResponse)
+        val dataJson = responseJson.getJSONArray("data")
+
+        val assignedSubjectIds = mutableSetOf<Int>()
+        for (i in 0 until dataJson.length()) {
+            val assignmentJson = dataJson.getJSONObject(i)
+            val assignmentDataJson = assignmentJson.getJSONObject("data")
+            val subjectId = assignmentDataJson.getInt("subject_id")
+
+            assignedSubjectIds.add(subjectId)
+        }
+
+        return assignedSubjectIds
+    }
+
+    private fun buildSubjects(getSubjectsResponse: String, assignedSubjectIds: Set<Int>): List<Subject> {
+        val responseJson = JSONObject(getSubjectsResponse)
+        val dataJson = responseJson.getJSONArray("data")
+
+        val lockedRadicals = mutableListOf<Subject>()
+        val unlockedRadicals = mutableListOf<Subject>()
+        val lockedKanji = mutableListOf<Subject>()
+        val unlockedKanji = mutableListOf<Subject>()
+        for (i in 0 until dataJson.length()) {
+            val assignmentJson = dataJson.getJSONObject(i)
+            val assignmentDataJson = assignmentJson.getJSONObject("data")
+
+            val type = assignmentJson.getString("object")
+            val subjectId = assignmentJson.getInt("id")
+            val isUnlocked = assignedSubjectIds.contains(subjectId)
+
+            val character =
+                if (!assignmentDataJson.isNull("characters")) {
+                    assignmentDataJson.getString("characters")
+                } else {
+                    null
+                }
+
+            val characterImageUrl = if (type == "radical" && character == null) {
+                var originalCharacterImageUrl: String? = null
+                val characterImagesJson = assignmentDataJson.getJSONArray("character_images")
+                for (j in 0 until characterImagesJson.length()) {
+                    val characterImageJson = characterImagesJson.getJSONObject(j)
+                    val metadataJson = characterImageJson.getJSONObject("metadata")
+                    if (!metadataJson.has("style_name")) {
+                        continue
+                    }
+                    val styleName = metadataJson.getString("style_name")
+                    if (styleName == "original") {
+                        originalCharacterImageUrl = characterImageJson.getString("url")
+                        break
+                    }
+                }
+                originalCharacterImageUrl
+            } else {
+                null
+            }
+
+            val meanings = mutableListOf<String>()
+            val meaningsJson = assignmentDataJson.getJSONArray("meanings")
+            for (j in 0 until meaningsJson.length()) {
+                val meaningJson = meaningsJson.getJSONObject(j)
+                val meaning = meaningJson.getString("meaning")
+                meanings.add(meaning)
+            }
+
+            val readings = mutableListOf<String>()
+            if (type == "kanji") {
+                val readingsJson = assignmentDataJson.getJSONArray("readings")
+                for (j in 0 until readingsJson.length()) {
+                    val readingJson = readingsJson.getJSONObject(j)
+                    val reading = readingJson.getString("reading")
+                    readings.add(reading)
+                }
+            }
+
+            val subject = Subject(type, isUnlocked, character, characterImageUrl, meanings, readings)
+
+            when {
+                type == "radical" && !isUnlocked -> lockedRadicals.add(subject)
+                type == "radical" && isUnlocked -> unlockedRadicals.add(subject)
+                type == "kanji" && !isUnlocked -> lockedKanji.add(subject)
+                type == "kanji" && isUnlocked -> unlockedKanji.add(subject)
+            }
+        }
+
+        val subjects = mutableListOf<Subject>()
+        subjects.addAll(lockedRadicals)
+        subjects.addAll(unlockedRadicals)
+        subjects.addAll(lockedKanji)
+        subjects.addAll(unlockedKanji)
+        return subjects
     }
 
     private fun fail(error: VolleyError) {
