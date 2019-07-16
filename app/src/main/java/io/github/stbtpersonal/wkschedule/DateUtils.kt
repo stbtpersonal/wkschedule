@@ -13,4 +13,8 @@ object DateUtils {
     fun toIso8601(date: Date): String {
         return this.iso8601Format.format(date)
     }
+
+    fun fromIso8601(dateString: String): Date {
+        return this.iso8601Format.parse(dateString)!!
+    }
 }

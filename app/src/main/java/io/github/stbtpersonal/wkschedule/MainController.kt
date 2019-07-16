@@ -6,6 +6,8 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.VolleyError
 import org.json.JSONObject
 import java.util.*
@@ -21,8 +23,16 @@ class MainController(private val mainActivity: MainActivity) {
     private val loginEditText = this.mainActivity.findViewById<EditText>(R.id.loginEditText)
     private val loginButton = this.mainActivity.findViewById<Button>(R.id.loginButton)
 
+    private val scheduleContainer = this.mainActivity.findViewById<ViewGroup>(R.id.scheduleContainer)
+    private val scheduleRecyclerView = this.mainActivity.findViewById<RecyclerView>(R.id.scheduleRecyclerView)
+    private val scheduleRecyclerViewAdapter = ScheduleRecyclerViewAdapter()
+
     init {
         this.loginButton.setOnClickListener { submitApiKey() }
+
+        this.scheduleRecyclerView.layoutManager =
+            LinearLayoutManager(this.mainActivity, RecyclerView.VERTICAL, false)
+        this.scheduleRecyclerView.adapter = this.scheduleRecyclerViewAdapter
 
         this.initialize()
     }
@@ -30,6 +40,7 @@ class MainController(private val mainActivity: MainActivity) {
     private fun hideAll() {
         this.spinner.visibility = View.GONE
         this.loginContainer.visibility = View.GONE
+        this.scheduleContainer.visibility = View.GONE
     }
 
     private fun initialize() {
@@ -74,52 +85,52 @@ class MainController(private val mainActivity: MainActivity) {
             { this.fail(it) },
             { response ->
                 val schedule = this.buildSchedule(response)
-                this.updateScheduleView(schedule)
+                this.scheduleRecyclerViewAdapter.setScheduleItems(schedule)
 
                 this.showSchedule()
             })
     }
 
-    private fun buildSchedule(getAssignmentsResponse: String): Map<String, AssignmentsHour> {
+    private fun buildSchedule(getAssignmentsResponse: String): Map<String, ScheduleItem> {
         val responseJson = JSONObject(getAssignmentsResponse)
         val dataJson = responseJson.getJSONArray("data")
 
-        val assignmentHours = ConcurrentSkipListMap<String, AssignmentsHour>()
+        val scheduleItems = ConcurrentSkipListMap<String, ScheduleItem>()
         for (i in 0 until dataJson.length()) {
             val assignmentJson = dataJson.getJSONObject(i)
             val assignmentDataJson = assignmentJson.getJSONObject("data")
 
             val availableAt = assignmentDataJson.getString("available_at")
-            if (!assignmentHours.containsKey(availableAt)) {
-                assignmentHours[availableAt] = AssignmentsHour()
+            if (!scheduleItems.containsKey(availableAt)) {
+                scheduleItems[availableAt] = ScheduleItem()
             }
-            val assignmentsHour = assignmentHours[availableAt]!!
+            val scheduleItem = scheduleItems[availableAt]!!
 
             val subjectType = assignmentDataJson.getString("subject_type")
             val passed = assignmentDataJson.getBoolean("passed")
             when (subjectType) {
                 "radical" -> {
-                    assignmentsHour.radicals++
+                    scheduleItem.radicals++
                     if (!passed) {
-                        assignmentsHour.newRadicals++
+                        scheduleItem.newRadicals++
                     }
                 }
                 "kanji" -> {
-                    assignmentsHour.kanji++
+                    scheduleItem.kanji++
                     if (!passed) {
-                        assignmentsHour.newKanji++
+                        scheduleItem.newKanji++
                     }
                 }
                 "vocabulary" -> {
-                    assignmentsHour.vocabulary++
+                    scheduleItem.vocabulary++
                     if (!passed) {
-                        assignmentsHour.newVocabulary++
+                        scheduleItem.newVocabulary++
                     }
                 }
             }
         }
 
-        return assignmentHours
+        return scheduleItems
     }
 
     private fun fail(error: VolleyError) {
@@ -145,10 +156,8 @@ class MainController(private val mainActivity: MainActivity) {
         this.initialize()
     }
 
-    private fun updateScheduleView(schedule: Map<String, AssignmentsHour>) {
-
-    }
-
     private fun showSchedule() {
+        this.hideAll()
+        this.scheduleContainer.visibility = View.VISIBLE
     }
 }

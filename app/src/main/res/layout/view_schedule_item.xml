@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:background="@drawable/border_schedule_item">
+
+    <TextView
+            android:id="@+id/scheduleItemHour"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|start"
+            android:layout_marginStart="20dp"
+            android:text="00:00"
+            android:textSize="20sp"/>
+
+    <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical|end"
+            android:layout_marginEnd="20dp">
+
+        <TextView
+                android:id="@+id/scheduleItemRadicals"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:text="Radicals: 999"
+                android:textColor="@color/wkRadicals"/>
+
+        <TextView
+                android:id="@+id/scheduleItemKanji"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:text="Kanji: 999"
+                android:textColor="@color/wkKanji"/>
+
+        <TextView
+                android:id="@+id/scheduleItemVocabulary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:text="Vocabulary: 999"
+                android:textColor="@color/wkVocabulary"/>
+
+    </LinearLayout>
+
+</FrameLayout>

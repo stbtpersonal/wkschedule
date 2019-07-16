@@ -1,6 +1,6 @@
 package io.github.stbtpersonal.wkschedule
 
-data class AssignmentsHour(
+data class ScheduleItem(
     var radicals: Int = 0,
     var kanji: Int = 0,
     var vocabulary: Int = 0,
