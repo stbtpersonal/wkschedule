@@ -26,7 +26,7 @@ object NotificationScheduler {
         calendar.set(Calendar.MINUTE, 0)
         calendar.set(Calendar.SECOND, 30)
 
-        val intent = Intent(applicationContext, this.javaClass)
+        val intent = Intent(applicationContext, NotificationBroadcastReceiver::class.java)
         intent.action = this.hourPassedAction
         val pendingIntent = PendingIntent.getBroadcast(applicationContext, 0, intent, 0)
 
