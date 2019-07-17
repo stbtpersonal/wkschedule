@@ -49,15 +49,26 @@ class WaniKaniInterface(private val context: Context) {
 
     fun getAssignments(
         apiKey: String,
-        availableAfter: Date,
-        availableBefore: Date,
         failureListener: (VolleyError) -> Unit,
         successListener: (String) -> Unit
     ) {
+        // WK seems to have a bug where they would sometimes return an old assignment that
+        // cannot be accessed by the user. This is a hacky workaround to get past that.
+        val aMonthAgoCalendar = Calendar.getInstance()
+        aMonthAgoCalendar.time = Date()
+        aMonthAgoCalendar.add(Calendar.MONTH, -1)
+        val aMonthAgo = aMonthAgoCalendar.time
+
+        val tomorrowCalendar = Calendar.getInstance()
+        tomorrowCalendar.time = Date()
+        tomorrowCalendar.add(Calendar.DATE, 1)
+        val tomorrow = tomorrowCalendar.time
+
         val params = HashMap<String, String>()
         params["burned"] = "false"
-        params["available_after"] = DateUtils.toIso8601(availableAfter)
-        params["available_before"] = DateUtils.toIso8601(availableBefore)
+        params["hidden"] = "false"
+        params["available_after"] = DateUtils.toIso8601(aMonthAgo)
+        params["available_before"] = DateUtils.toIso8601(tomorrow)
 
         val request = this.buildRequest(apiKey, "assignments", params, failureListener, successListener)
         this.requestQueue.add(request)

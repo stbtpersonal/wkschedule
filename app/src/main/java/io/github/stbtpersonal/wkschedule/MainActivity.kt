@@ -86,17 +86,8 @@ class MainActivity : Activity() {
     }
 
     private fun getSchedule(apiKey: String, level: String) {
-        val now = Date()
-
-        val calendar = Calendar.getInstance()
-        calendar.time = now
-        calendar.add(Calendar.DATE, 1)
-        val tomorrow = calendar.time
-
         this.waniKaniInterface.getAssignments(
             apiKey,
-            now,
-            tomorrow,
             { this.fail(it) },
             { response ->
                 val schedule = this.buildSchedule(response)
@@ -106,16 +97,21 @@ class MainActivity : Activity() {
             })
     }
 
-    private fun buildSchedule(getAssignmentsResponse: String): Map<String, ScheduleItem> {
+    private fun buildSchedule(getAssignmentsResponse: String): Map<Date, ScheduleItem> {
         val responseJson = JSONObject(getAssignmentsResponse)
         val dataJson = responseJson.getJSONArray("data")
 
-        val scheduleItems = ConcurrentSkipListMap<String, ScheduleItem>()
+        val now = Date()
+        val scheduleItems = ConcurrentSkipListMap<Date, ScheduleItem>()
         for (i in 0 until dataJson.length()) {
             val assignmentJson = dataJson.getJSONObject(i)
             val assignmentDataJson = assignmentJson.getJSONObject("data")
 
-            val availableAt = assignmentDataJson.getString("available_at")
+            val availableAtJson = assignmentDataJson.getString("available_at")
+            var availableAt = DateUtils.fromIso8601(availableAtJson)
+            if (availableAt.before(now)) {
+                availableAt = DateUtils.epoch
+            }
             if (!scheduleItems.containsKey(availableAt)) {
                 scheduleItems[availableAt] = ScheduleItem()
             }
