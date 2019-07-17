@@ -5,7 +5,7 @@
         android:layout_height="wrap_content"
         android:paddingTop="10dp"
         android:paddingBottom="10dp"
-        android:background="@drawable/border_schedule_item">
+        android:background="@drawable/border_list_item">
 
     <TextView
             android:id="@+id/scheduleItemHour"

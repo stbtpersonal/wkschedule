@@ -1,10 +1,10 @@
 package io.github.stbtpersonal.wkschedule
 
-data class Subject(
+data class StudySubject(
     val type: String,
     val isUnlocked: Boolean,
     val character: String?,
-    val characterImageUrls: String?,
+    val characterImageUrl: String?,
     val meanings: List<String>,
     val readings: List<String>
 )

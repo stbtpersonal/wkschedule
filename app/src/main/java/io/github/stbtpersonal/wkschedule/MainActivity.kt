@@ -3,31 +3,24 @@ package io.github.stbtpersonal.wkschedule
 import android.app.Activity
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.VolleyError
+import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONObject
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListMap
+import android.content.Intent
+import android.net.Uri
+
 
 class MainActivity : Activity() {
     private lateinit var waniKaniInterface: WaniKaniInterface
     private lateinit var keyValueStore: KeyValueStore
 
-    private lateinit var spinner: ProgressBar
-
-    private lateinit var loginContainer: ViewGroup
-    private lateinit var loginEditText: EditText
-    private lateinit var loginButton: Button
-
-    private lateinit var scheduleContainer: ViewGroup
-    private lateinit var scheduleRecyclerView: RecyclerView
-    private lateinit var scheduleRecyclerViewAdapter: ScheduleRecyclerViewAdapter
+    private val scheduleRecyclerViewAdapter = ScheduleRecyclerViewAdapter()
+    private val studyRecyclerViewAdapter = StudyRecyclerViewAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,18 +30,20 @@ class MainActivity : Activity() {
 
         this.setContentView(R.layout.activity_main)
 
-        this.spinner = this.findViewById(R.id.spinner)
-
-        this.loginContainer = this.findViewById(R.id.loginContainer)
-        this.loginEditText = this.findViewById(R.id.loginEditText)
-        this.loginButton = this.findViewById(R.id.loginButton)
         this.loginButton.setOnClickListener { submitApiKey() }
 
-        this.scheduleContainer = this.findViewById(R.id.scheduleContainer)
-        this.scheduleRecyclerView = this.findViewById(R.id.scheduleRecyclerView)
-        this.scheduleRecyclerViewAdapter = ScheduleRecyclerViewAdapter()
         this.scheduleRecyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
         this.scheduleRecyclerView.adapter = this.scheduleRecyclerViewAdapter
+
+        this.studyRecyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
+        this.studyRecyclerView.adapter = this.studyRecyclerViewAdapter
+
+        this.menuButton.setOnClickListener { this.menuContainer.visibility = View.VISIBLE }
+        this.menuRefreshButton.setOnClickListener { this.initialize() }
+        this.menuScheduleButton.setOnClickListener { this.showSchedule() }
+        this.menuStudyButton.setOnClickListener { this.showStudy() }
+        this.menuWaniKaniButton.setOnClickListener { this.browseWaniKani() }
+        this.menuWkStatsButton.setOnClickListener { this.browseWkStats() }
 
         this.initialize()
     }
@@ -57,6 +52,9 @@ class MainActivity : Activity() {
         this.spinner.visibility = View.GONE
         this.loginContainer.visibility = View.GONE
         this.scheduleContainer.visibility = View.GONE
+        this.subjectsContainer.visibility = View.GONE
+        this.menuButton.visibility = View.GONE
+        this.menuContainer.visibility = View.GONE
     }
 
     private fun initialize() {
@@ -93,7 +91,7 @@ class MainActivity : Activity() {
                 val schedule = this.buildSchedule(response)
                 this.scheduleRecyclerViewAdapter.setScheduleItems(schedule)
 
-                this.getSubjects(apiKey, level)
+                this.getStudySubjects(apiKey, level)
             })
     }
 
@@ -144,7 +142,7 @@ class MainActivity : Activity() {
         return scheduleItems
     }
 
-    private fun getSubjects(apiKey: String, level: String) {
+    private fun getStudySubjects(apiKey: String, level: String) {
         this.waniKaniInterface.getLevelAssignments(
             apiKey,
             level,
@@ -156,7 +154,8 @@ class MainActivity : Activity() {
                     { this.fail(it) },
                     { getSubjectsResponse ->
                         val assignedSubjectIds = this.extractAssignedSubjectIds(getLevelAssignmentsResponse)
-                        val subjects = this.buildSubjects(getSubjectsResponse, assignedSubjectIds)
+                        val studySubjects = this.buildStudySubjects(getSubjectsResponse, assignedSubjectIds)
+                        this.studyRecyclerViewAdapter.setStudySubjects(studySubjects)
 
                         this.showSchedule()
                     })
@@ -179,14 +178,14 @@ class MainActivity : Activity() {
         return assignedSubjectIds
     }
 
-    private fun buildSubjects(getSubjectsResponse: String, assignedSubjectIds: Set<Int>): List<Subject> {
+    private fun buildStudySubjects(getSubjectsResponse: String, assignedSubjectIds: Set<Int>): List<StudySubject> {
         val responseJson = JSONObject(getSubjectsResponse)
         val dataJson = responseJson.getJSONArray("data")
 
-        val lockedRadicals = mutableListOf<Subject>()
-        val unlockedRadicals = mutableListOf<Subject>()
-        val lockedKanji = mutableListOf<Subject>()
-        val unlockedKanji = mutableListOf<Subject>()
+        val lockedRadicals = mutableListOf<StudySubject>()
+        val unlockedRadicals = mutableListOf<StudySubject>()
+        val lockedKanji = mutableListOf<StudySubject>()
+        val unlockedKanji = mutableListOf<StudySubject>()
         for (i in 0 until dataJson.length()) {
             val assignmentJson = dataJson.getJSONObject(i)
             val assignmentDataJson = assignmentJson.getJSONObject("data")
@@ -240,7 +239,7 @@ class MainActivity : Activity() {
                 }
             }
 
-            val subject = Subject(type, isUnlocked, character, characterImageUrl, meanings, readings)
+            val subject = StudySubject(type, isUnlocked, character, characterImageUrl, meanings, readings)
 
             when {
                 type == "radical" && !isUnlocked -> lockedRadicals.add(subject)
@@ -250,12 +249,12 @@ class MainActivity : Activity() {
             }
         }
 
-        val subjects = mutableListOf<Subject>()
-        subjects.addAll(lockedRadicals)
-        subjects.addAll(unlockedRadicals)
-        subjects.addAll(lockedKanji)
-        subjects.addAll(unlockedKanji)
-        return subjects
+        val studySubjects = mutableListOf<StudySubject>()
+        studySubjects.addAll(lockedRadicals)
+        studySubjects.addAll(unlockedRadicals)
+        studySubjects.addAll(lockedKanji)
+        studySubjects.addAll(unlockedKanji)
+        return studySubjects
     }
 
     private fun fail(error: VolleyError) {
@@ -284,5 +283,29 @@ class MainActivity : Activity() {
     private fun showSchedule() {
         this.hideAll()
         this.scheduleContainer.visibility = View.VISIBLE
+        this.menuButton.visibility = View.VISIBLE
+    }
+
+    private fun showStudy() {
+        this.hideAll()
+        this.subjectsContainer.visibility = View.VISIBLE
+        this.menuButton.visibility = View.VISIBLE
+    }
+
+    private fun browseWaniKani() {
+        this.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("http://www.wanikani.com")))
+    }
+
+    private fun browseWkStats() {
+        this.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("http://www.wkstats.com")))
+    }
+
+    override fun onBackPressed() {
+        if (this.menuContainer.visibility == View.VISIBLE) {
+            this.menuContainer.visibility = View.GONE
+            return
+        }
+
+        super.onBackPressed()
     }
 }
