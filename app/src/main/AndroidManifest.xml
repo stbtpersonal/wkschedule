@@ -4,6 +4,7 @@
           package="io.github.stbtpersonal.wkschedule">
 
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
             android:allowBackup="false"
@@ -19,6 +20,14 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <receiver android:name=".NotificationBroadcastReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="io.github.stbtpersonal.wkschedule.intent.action.HOUR_PASSED"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

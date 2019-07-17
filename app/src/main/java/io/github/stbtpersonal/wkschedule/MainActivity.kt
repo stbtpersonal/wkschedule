@@ -45,6 +45,12 @@ class MainActivity : Activity() {
         this.menuWaniKaniButton.setOnClickListener { this.browseWaniKani() }
         this.menuWkStatsButton.setOnClickListener { this.browseWkStats() }
 
+        NotificationScheduler.scheduleNotifications(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
         this.initialize()
     }
 
