@@ -88,13 +88,11 @@
 
     <ImageView
             android:id="@+id/menuButton"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
             android:layout_gravity="top|end"
             android:paddingStart="10dp"
             android:paddingEnd="10dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
             android:src="@drawable/ic_menu"/>
 
     <LinearLayout
