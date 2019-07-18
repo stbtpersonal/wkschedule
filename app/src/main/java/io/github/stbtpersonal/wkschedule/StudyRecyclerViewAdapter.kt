@@ -1,6 +1,7 @@
 package io.github.stbtpersonal.wkschedule
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.view.LayoutInflater
 import android.view.View
@@ -55,11 +56,12 @@ class StudyRecyclerViewAdapter : RecyclerView.Adapter<StudyRecyclerViewAdapter.V
         if (studySubject.character != null) {
             subjectCharacterText.text = studySubject.character
             subjectCharacterText.visibility = View.VISIBLE
-            subjectCharacterImage.visibility = View.GONE
+            subjectCharacterImage.visibility = View.INVISIBLE
         } else {
             Picasso.get().load(studySubject.characterImageUrl).into(subjectCharacterImage)
-            subjectCharacterText.visibility = View.VISIBLE
-            subjectCharacterImage.visibility = View.GONE
+            subjectCharacterText.visibility = View.INVISIBLE
+            subjectCharacterImage.visibility = View.VISIBLE
+            subjectCharacterImage.setColorFilter(Color.WHITE)
         }
 
         val subjectMeanings = studySubjectView.findViewById<TextView>(R.id.subjectMeanings)
