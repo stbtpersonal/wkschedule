@@ -176,9 +176,12 @@ class MainActivity : Activity() {
         for (i in 0 until dataJson.length()) {
             val assignmentJson = dataJson.getJSONObject(i)
             val assignmentDataJson = assignmentJson.getJSONObject("data")
-            val subjectId = assignmentDataJson.getInt("subject_id")
 
-            assignedSubjectIds.add(subjectId)
+            val isPassed = assignmentDataJson.getBoolean("passed")
+            if (!isPassed) {
+                val subjectId = assignmentDataJson.getInt("subject_id")
+                assignedSubjectIds.add(subjectId)
+            }
         }
 
         return assignedSubjectIds
@@ -259,10 +262,10 @@ class MainActivity : Activity() {
         }
 
         val studySubjects = mutableListOf<StudySubject>()
-        studySubjects.addAll(lockedRadicals)
         studySubjects.addAll(unlockedRadicals)
-        studySubjects.addAll(lockedKanji)
         studySubjects.addAll(unlockedKanji)
+        studySubjects.addAll(lockedRadicals)
+        studySubjects.addAll(lockedKanji)
         return studySubjects
     }
 
