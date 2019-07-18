@@ -20,6 +20,7 @@ class StudyRecyclerViewAdapter : RecyclerView.Adapter<StudyRecyclerViewAdapter.V
     fun setStudySubjects(studySubjects: List<StudySubject>) {
         this.studySubjects.clear()
         this.studySubjects.addAll(studySubjects.toList())
+        this.notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

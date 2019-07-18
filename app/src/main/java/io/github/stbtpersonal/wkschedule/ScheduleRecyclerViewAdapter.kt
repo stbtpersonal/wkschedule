@@ -15,6 +15,7 @@ class ScheduleRecyclerViewAdapter : RecyclerView.Adapter<ScheduleRecyclerViewAda
     fun setScheduleItems(scheduleItems: Map<Date, ScheduleItem>) {
         this.scheduleItems.clear()
         this.scheduleItems.addAll(scheduleItems.toList())
+        this.notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
