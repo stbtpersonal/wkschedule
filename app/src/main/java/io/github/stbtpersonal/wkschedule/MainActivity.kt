@@ -1,6 +1,8 @@
 package io.github.stbtpersonal.wkschedule
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -11,8 +13,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONObject
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListMap
-import android.content.Intent
-import android.net.Uri
 
 
 class MainActivity : Activity() {
@@ -240,8 +240,11 @@ class MainActivity : Activity() {
                 val readingsJson = assignmentDataJson.getJSONArray("readings")
                 for (j in 0 until readingsJson.length()) {
                     val readingJson = readingsJson.getJSONObject(j)
-                    val reading = readingJson.getString("reading")
-                    readings.add(reading)
+                    val isPrimary = readingJson.getBoolean("primary")
+                    if (isPrimary) {
+                        val reading = readingJson.getString("reading")
+                        readings.add(reading)
+                    }
                 }
             }
 
