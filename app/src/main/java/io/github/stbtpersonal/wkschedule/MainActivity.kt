@@ -49,7 +49,7 @@ class MainActivity : Activity() {
         this.studyRecyclerView.adapter = this.studyRecyclerViewAdapter
 
         this.menuButton.setOnClickListener { this.showMenu() }
-        this.menuRefreshButton.setOnClickListener { this.initialize() }
+        this.menuRefreshButton.setOnClickListener { this.refresh() }
         this.menuScheduleButton.setOnClickListener { this.showSchedule() }
         this.menuStudyButton.setOnClickListener { this.showStudy() }
         this.menuWaniKaniButton.setOnClickListener { this.browseWaniKani() }
@@ -64,6 +64,8 @@ class MainActivity : Activity() {
         this.wkStatsWebView.loadUrl("http://www.wkstats.com")
 
         NotificationScheduler.scheduleNotifications(this)
+
+        this.refresh()
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -83,12 +85,6 @@ class MainActivity : Activity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-
-        this.initialize()
-    }
-
     private fun hideAll() {
         this.spinner.visibility = View.GONE
         this.loginContainer.visibility = View.GONE
@@ -100,7 +96,7 @@ class MainActivity : Activity() {
         this.wkStatsWebView.visibility = View.GONE
     }
 
-    private fun initialize() {
+    private fun refresh() {
         this.hideAll()
         this.spinner.visibility = View.VISIBLE
 
@@ -326,7 +322,7 @@ class MainActivity : Activity() {
         }
 
         this.keyValueStore.apiKey = apiKey
-        this.initialize()
+        this.refresh()
     }
 
     private fun showMenu() {
