@@ -1,10 +1,13 @@
 package io.github.stbtpersonal.wkschedule
 
+import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.webkit.CookieManager
+import android.webkit.WebResourceRequest
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -19,6 +22,8 @@ class MainActivity : Activity() {
     private lateinit var waniKaniInterface: WaniKaniInterface
     private lateinit var keyValueStore: KeyValueStore
 
+    private lateinit var popups: List<View>
+
     private val scheduleRecyclerViewAdapter = ScheduleRecyclerViewAdapter()
     private val studyRecyclerViewAdapter = StudyRecyclerViewAdapter()
 
@@ -30,6 +35,8 @@ class MainActivity : Activity() {
 
         this.setContentView(R.layout.activity_main)
 
+        this.popups = listOf<View>(this.menuContainer, this.subjectsContainer, this.wkWebView, this.wkStatsWebView)
+
         this.loginButton.setOnClickListener { submitApiKey() }
 
         this.scheduleRecyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
@@ -38,14 +45,33 @@ class MainActivity : Activity() {
         this.studyRecyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
         this.studyRecyclerView.adapter = this.studyRecyclerViewAdapter
 
-        this.menuButton.setOnClickListener { this.menuContainer.visibility = View.VISIBLE }
+        this.menuButton.setOnClickListener { this.showMenu() }
         this.menuRefreshButton.setOnClickListener { this.initialize() }
         this.menuScheduleButton.setOnClickListener { this.showSchedule() }
         this.menuStudyButton.setOnClickListener { this.showStudy() }
         this.menuWaniKaniButton.setOnClickListener { this.browseWaniKani() }
         this.menuWkStatsButton.setOnClickListener { this.browseWkStats() }
 
+        CookieManager.getInstance().setAcceptCookie(true)
+
+        this.initWebView(this.wkWebView)
+        this.wkWebView.loadUrl("http://www.wanikani.com")
+
+        this.initWebView(this.wkStatsWebView)
+        this.wkStatsWebView.loadUrl("http://www.wkstats.com")
+
         NotificationScheduler.scheduleNotifications(this)
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun initWebView(webView: WebView) {
+        webView.settings.javaScriptEnabled = true
+        webView.settings.domStorageEnabled = true
+        webView.settings.setAppCacheEnabled(true)
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean = false
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean = false
+        }
     }
 
     override fun onResume() {
@@ -61,6 +87,8 @@ class MainActivity : Activity() {
         this.subjectsContainer.visibility = View.GONE
         this.menuButton.visibility = View.GONE
         this.menuContainer.visibility = View.GONE
+        this.wkWebView.visibility = View.GONE
+        this.wkStatsWebView.visibility = View.GONE
     }
 
     private fun initialize() {
@@ -292,6 +320,11 @@ class MainActivity : Activity() {
         this.initialize()
     }
 
+    private fun showMenu() {
+        this.hideAll()
+        this.menuContainer.visibility = View.VISIBLE
+    }
+
     private fun showSchedule() {
         this.hideAll()
         this.scheduleContainer.visibility = View.VISIBLE
@@ -305,16 +338,19 @@ class MainActivity : Activity() {
     }
 
     private fun browseWaniKani() {
-        this.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("http://www.wanikani.com")))
+        this.hideAll()
+        this.wkWebView.visibility = View.VISIBLE
     }
 
     private fun browseWkStats() {
-        this.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("http://www.wkstats.com")))
+        this.hideAll()
+        this.wkStatsWebView.visibility = View.VISIBLE
     }
 
     override fun onBackPressed() {
-        if (this.menuContainer.visibility == View.VISIBLE) {
-            this.menuContainer.visibility = View.GONE
+        val visiblePopup = this.popups.firstOrNull { it.visibility == View.VISIBLE }
+        if (visiblePopup != null) {
+            this.showSchedule()
             return
         }
 
