@@ -24,6 +24,9 @@ class MainActivity : Activity() {
 
     private lateinit var popups: List<View>
 
+    private val removeTimeoutScript = "var timeoutElement = document.getElementById('timeout');" +
+            "if (timeoutElement) { timeoutElement.parentNode.removeChild(timeoutElement); }"
+
     private val scheduleRecyclerViewAdapter = ScheduleRecyclerViewAdapter()
     private val studyRecyclerViewAdapter = StudyRecyclerViewAdapter()
 
@@ -69,8 +72,14 @@ class MainActivity : Activity() {
         webView.settings.domStorageEnabled = true
         webView.settings.setAppCacheEnabled(true)
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean = false
-            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean = false
+            override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean = false
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean = false
+
+            override fun onPageFinished(view: WebView, url: String) {
+                super.onPageFinished(view, url)
+
+                view.loadUrl("javascript:$removeTimeoutScript")
+            }
         }
     }
 
